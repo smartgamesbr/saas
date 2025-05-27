@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import { useAuth } from './hooks/useAuth';
@@ -8,6 +8,7 @@ import GeneratedActivityView from './components/GeneratedActivityView';
 import MyActivitiesPage from './components/MyActivitiesPage';
 import SubscriptionPlans from './components/SubscriptionPlans';
 import { ActivityFormData, GeneratedPage } from './types';
+import Logger from './utils/logger';
 
 const App: React.FC = () => {
   const { user, signIn, signOut, subscribe, isLoading } = useAuth();
@@ -15,11 +16,34 @@ const App: React.FC = () => {
   const [currentActivityForm, setCurrentActivityForm] = useState<ActivityFormData | null>(null);
   const [generatedPages, setGeneratedPages] = useState<GeneratedPage[]>([]);
   const [viewingActivityName, setViewingActivityName] = useState<string | null>(null);
+  const [appInitialized, setAppInitialized] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    Logger.debug('App component mounted');
+    setAppInitialized(true);
+    
+    return () => {
+      Logger.debug('App component unmounting');
+    };
+  }, []);
+
+  useEffect(() => {
+    Logger.debug('App state update:', {
+      isLoading,
+      hasUser: !!user,
+      showMyActivitiesPage,
+      hasCurrentForm: !!currentActivityForm,
+      generatedPagesCount: generatedPages.length,
+      viewingActivityName,
+      appInitialized
+    });
+  }, [isLoading, user, showMyActivitiesPage, currentActivityForm, generatedPages, viewingActivityName, appInitialized]);
+
+  if (!appInitialized || isLoading) {
+    Logger.debug('App showing loading state:', { appInitialized, isLoading });
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <LoadingSpinner text="Carregando...\" size="lg" />
+        <LoadingSpinner text="Carregando..." size="lg" />
       </div>
     );
   }

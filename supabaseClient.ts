@@ -1,4 +1,3 @@
-
 import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import { User as AppUser, ActivityFormData, GeneratedPage, SavedActivity } from './types'; // Renamed to avoid conflict
 
@@ -8,14 +7,14 @@ import { User as AppUser, ActivityFormData, GeneratedPage, SavedActivity } from 
 const FALLBACK_SUPABASE_URL = "https://ntupwkrctidjoxkoyklu.supabase.co";
 const FALLBACK_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50dXB3a3JjdGlkam94a295a2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxOTQzODUsImV4cCI6MjA2Mzc3MDM4NX0.e_cRNHQFhxBEzUwJ79bNK7g6IaYALZkv6x-dSAxii2A";
 
-let supabaseUrl = process.env.SUPABASE_URL;
-let supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+let supabaseUrl = import.meta.env.SUPABASE_URL;
+let supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY;
 let usingFallbackKeys = false;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
     "----------------------------------------------------------------------------------\n" +
-    "WARNING: Supabase URL or Anon Key not found in process.env. \n" +
+    "WARNING: Supabase URL or Anon Key not found in environment variables. \n" +
     "Attempting to use hardcoded fallback keys. \n" +
     "This is intended for specific development/demonstration environments only. \n" +
     "For actual development and production, ensure SUPABASE_URL and SUPABASE_ANON_KEY are correctly set as environment variables.\n" +
@@ -34,9 +33,7 @@ if (usingFallbackKeys) {
     console.warn("Supabase client initialized using FALLBACK keys. Please verify this is the intended behavior for your current environment.");
 }
 
-
 export { supabase };
-
 
 // Helper function to get user profile
 export const getUserProfile = async (userId: string): Promise<Pick<AppUser, 'isAdmin' | 'isSubscribed' | 'email'> | null> => {

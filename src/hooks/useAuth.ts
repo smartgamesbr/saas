@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User as AppUser } from '../types';
 import { supabase, getUserProfile } from '../supabaseClient';
-import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
+import { AuthError, User as SupabaseUser, PostgrestError } from '@supabase/supabase-js';
 import { ADMIN_EMAIL } from '../constants';
-import Logger from '../utils/logger';
 
 export const useAuth = () => {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
@@ -11,90 +10,46 @@ export const useAuth = () => {
   const [authError, setAuthError] = useState<AuthError | null>(null);
   
   const processSupabaseUser = useCallback(async (supabaseUser: SupabaseUser | null): Promise<AppUser | null> => {
-    Logger.debug('Processing Supabase user:', { userId: supabaseUser?.id });
-    
     if (!supabaseUser) {
-      Logger.debug('No Supabase user to process');
       return null;
     }
 
     try {
       const profile = await getUserProfile(supabaseUser.id);
-      Logger.debug('Got user profile:', { profile });
-      
       const userEmail = supabaseUser.email || profile?.email || '';
-      const processedUser = {
+      return {
         id: supabaseUser.id,
         email: userEmail,
         isAdmin: (profile?.isAdmin || false) || (userEmail === ADMIN_EMAIL),
         isSubscribed: profile?.isSubscribed || false,
       };
-      
-      Logger.debug('Processed user:', processedUser);
-      return processedUser;
-    } catch (error) {
-      Logger.error('Error processing Supabase user:', error);
-      throw error;
+    } catch (err) {
+      console.error('Error processing user profile:', err);
+      // Return basic user info even if profile fetch fails
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        isAdmin: supabaseUser.email === ADMIN_EMAIL,
+        isSubscribed: false,
+      };
     }
   }, []);
 
   useEffect(() => {
-    Logger.debug('Auth hook initialized');
     let isMounted = true;
     
     const fetchSession = async () => {
       try {
-        Logger.debug('Fetching session');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!isMounted) {
-          Logger.debug('Component unmounted during session fetch');
+        if (!isMounted) return;
+
+        if (sessionError) {
+          setAuthError(sessionError);
+          setIsLoading(false);
           return;
         }
 
-        if (sessionError) {
-          Logger.error('Session fetch error:', sessionError);
-          setAuthError(sessionError);
-        } else {
-          if (session?.user) {
-            Logger.debug('Session found, processing user');
-            const processedUser = await processSupabaseUser(session.user);
-            if (isMounted) {
-              setAppUser(processedUser);
-              setAuthError(null);
-            }
-          } else {
-            Logger.debug('No session found');
-            if (isMounted) {
-              setAppUser(null);
-              setAuthError(null);
-            }
-          }
-        }
-      } catch (err) {
-        Logger.error('Unexpected error during session fetch:', err);
-        if (isMounted) {
-          setAuthError(err instanceof AuthError ? err : new AuthError(err instanceof Error ? err.message : 'Unknown error'));
-        }
-      } finally {
-        if (isMounted) {
-          Logger.debug('Setting isLoading to false');
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      Logger.debug('Auth state changed:', { event, hasSession: !!session });
-      
-      if (!isMounted) {
-        Logger.debug('Component unmounted during auth state change');
-        return;
-      }
-
-      try {
         if (session?.user) {
           const processedUser = await processSupabaseUser(session.user);
           if (isMounted) {
@@ -108,50 +63,180 @@ export const useAuth = () => {
           }
         }
       } catch (err) {
-        Logger.error('Error during auth state change:', err);
+        if (!isMounted) return;
+        
+        console.error("Error during session fetch:", err);
+        if (err instanceof AuthError) {
+          setAuthError(err);
+        } else {
+          setAuthError(new AuthError(err instanceof Error ? err.message : 'Unknown error during session fetch.'));
+        }
+      } finally {
         if (isMounted) {
-          setAuthError(err instanceof AuthError ? err : new AuthError(err instanceof Error ? err.message : 'Unknown error'));
+          setIsLoading(false);
         }
       }
-    });
+    };
+
+    fetchSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!isMounted) return;
+        
+        try {
+          if (session?.user) {
+            const processedUser = await processSupabaseUser(session.user);
+            if (isMounted) {
+              setAppUser(processedUser);
+              setAuthError(null);
+            }
+          } else {
+            if (isMounted) {
+              setAppUser(null);
+              setAuthError(null);
+            }
+          }
+        } catch (err) {
+          if (!isMounted) return;
+          console.error("Error during auth state change:", err);
+          setAuthError(err instanceof AuthError ? err : new AuthError(err instanceof Error ? err.message : 'Unknown error during auth state change.'));
+        }
+      }
+    );
 
     return () => {
-      Logger.debug('Auth hook cleanup');
       isMounted = false;
       authListener?.subscription.unsubscribe();
     };
   }, [processSupabaseUser]);
 
-  useEffect(() => {
-    Logger.getAuthStateLog(appUser, isLoading);
-  }, [appUser, isLoading]);
-
-  // Rest of your auth methods with added logging...
   const signIn = useCallback(async (email: string, password?: string) => {
-    Logger.debug('Sign in attempt:', { email });
     setAuthError(null);
     try {
       const response = password 
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signInWithOtp({ email });
-      
+        : await supabase.auth.signInWithOtp({ 
+            email,
+            options: { emailRedirectTo: window.location.origin }
+          });
+
       if (response.error) {
-        Logger.error('Sign in error:', response.error);
         setAuthError(response.error);
         return response.error;
       }
-      
-      Logger.info('Sign in successful');
       return null;
-    } catch (error) {
-      Logger.error('Unexpected sign in error:', error);
-      const authError = error instanceof AuthError ? error : new AuthError('Unknown error during sign in');
-      setAuthError(authError);
-      return authError;
+    } catch (err) {
+      const error = err instanceof AuthError ? err : new AuthError('Unknown error during sign in');
+      setAuthError(error);
+      return error;
     }
   }, []);
 
-  // Add similar logging to other auth methods...
+  const signUp = useCallback(async (email: string, password?: string) => {
+    setAuthError(null);
+    try {
+      const response = password
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithOtp({
+            email,
+            options: { emailRedirectTo: window.location.origin }
+          });
 
-  return { user: appUser, signIn, isLoading, authError, setAuthError };
+      if (response.error) {
+        setAuthError(response.error);
+        return response.error;
+      }
+
+      if (response.data.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: response.data.user.id,
+              email: response.data.user.email,
+              is_admin: response.data.user.email === ADMIN_EMAIL,
+              is_subscribed: false,
+              updated_at: new Date().toISOString()
+            });
+
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+          }
+        } catch (profileErr) {
+          console.error("Error during profile creation:", profileErr);
+        }
+      }
+      return null;
+    } catch (err) {
+      const error = err instanceof AuthError ? err : new AuthError('Unknown error during sign up');
+      setAuthError(error);
+      return error;
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setAuthError(error);
+    }
+  }, []);
+
+  const subscribe = useCallback(async (): Promise<AuthError | null> => {
+    if (!appUser) {
+      const error = new AuthError("User not logged in");
+      setAuthError(error);
+      return error;
+    }
+
+    setAuthError(null);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_subscribed: true, updated_at: new Date().toISOString() })
+        .eq('id', appUser.id);
+      
+      if (error) {
+        const authError = new AuthError(`Failed to update subscription: ${error.message}`);
+        setAuthError(authError);
+        return authError;
+      }
+
+      setAppUser(prev => prev ? { ...prev, isSubscribed: true } : null);
+      return null;
+    } catch (err) {
+      const error = err instanceof AuthError ? err : new AuthError('Unknown error during subscription');
+      setAuthError(error);
+      return error;
+    }
+  }, [appUser]);
+
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/#password-reset`,
+      });
+      if (error) {
+        setAuthError(error);
+      }
+      return { error };
+    } catch (err) {
+      const error = err instanceof AuthError ? err : new AuthError('Unknown error during password reset');
+      setAuthError(error);
+      return { error };
+    }
+  }, []);
+
+  return {
+    user: appUser,
+    signIn,
+    signUp,
+    signOut,
+    subscribe,
+    resetPasswordForEmail,
+    isLoading,
+    authError,
+    setAuthError
+  };
 };

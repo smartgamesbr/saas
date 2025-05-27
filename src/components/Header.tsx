@@ -1,15 +1,11 @@
 import React from 'react';
-import { APP_NAME } from '../../constants';
-import { User } from '../../types';
+import { APP_NAME } from '../constants';
+import { User } from '../types';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 
 interface HeaderProps {
   user: User | null;
   onLoginClick: () => void;
-  onLogoutClick: () => void;
-  onMyProfileClick?: () => void;
-  onMySubscriptionClick?: () => void;
-  onMyActivitiesClick: () => void;
   onMenuClick: () => void;
 }
 

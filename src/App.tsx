@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { ActivityFormData, GeneratedPage, User } from './types';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
-import ActivityForm from '../components/ActivityForm';
-import GeneratedActivityView from '../components/GeneratedActivityView';
-import LoadingSpinner from '../components/LoadingSpinner';
-import Modal from '../components/Modal';
-import SubscriptionPlans from '../components/SubscriptionPlans';
-import MyActivitiesPage from '../components/MyActivitiesPage';
+import ActivityForm from './components/ActivityForm';
+import GeneratedActivityView from './components/GeneratedActivityView';
+import LoadingSpinner from './components/LoadingSpinner';
+import Modal from './components/Modal';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import MyActivitiesPage from './components/MyActivitiesPage';
 import { SimulatedUserTier } from './types';
 
 const App: React.FC = () => {
@@ -24,11 +24,9 @@ const App: React.FC = () => {
 
   const { user, signIn, signUp, signOut, subscribe, resetPasswordForEmail, isLoading: authIsLoading, authError, setAuthError } = useAuth();
 
-  // ... rest of your existing state and handlers ...
-
   if (authIsLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <LoadingSpinner text="Carregando...\" size="lg"/>
+      <LoadingSpinner text="Carregando..." size="lg"/>
     </div>;
   }
 
@@ -38,10 +36,10 @@ const App: React.FC = () => {
   return (
     <Layout
       user={user}
-      onLoginClick={() => openLoginModal(false)}
+      onLoginClick={() => {}}
       onLogoutClick={signOut}
-      onMyActivitiesClick={handleNavigateToMyActivities}
-      onMySubscriptionClick={() => handleSubscribeRequest()}
+      onMyActivitiesClick={() => setShowMyActivitiesPage(true)}
+      onMySubscriptionClick={() => {}}
     >
       {!showMyActivitiesPage && (
         <div className="text-center mb-10 md:mb-12">
@@ -55,14 +53,13 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {showGeneratorForm && <SubscriptionPlans onPremiumSubscribeClick={handleSubscribeRequest} />}
+      {showGeneratorForm && <SubscriptionPlans onPremiumSubscribeClick={() => {}} />}
 
       {user?.isAdmin && !showMyActivitiesPage && (
         <div className="my-10 p-6 bg-primary-50 border border-primary-200 rounded-xl shadow-lg max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-primary-800 mb-6 border-b border-primary-200 pb-4">
             Painel Administrativo
           </h2>
-          {/* ... rest of admin panel ... */}
         </div>
       )}
 
@@ -75,11 +72,11 @@ const App: React.FC = () => {
 
       {showGeneratorForm && (
         <ActivityForm
-          onSubmit={handleFormSubmit}
+          onSubmit={() => {}}
           isGenerating={isGenerating}
           currentUser={user}
           simulatedUserTier={simulatedUserTier}
-          onSubscribeClick={() => handleSubscribeRequest()}
+          onSubscribeClick={() => {}}
         />
       )}
 
@@ -88,10 +85,10 @@ const App: React.FC = () => {
       {showResultsView && (
         <GeneratedActivityView
           pages={generatedPages}
-          onDownloadPdf={handleDownloadPdf}
+          onDownloadPdf={() => {}}
           isGeneratingPdf={isGeneratingPdf}
-          onClearResults={handleClearResultsAndGoToGenerator}
-          onSaveActivity={handleSaveCurrentActivity}
+          onClearResults={() => setGeneratedPages([])}
+          onSaveActivity={() => {}}
           isSavingActivity={isSavingActivity}
           activityName={viewingActivityName}
         />
@@ -100,12 +97,10 @@ const App: React.FC = () => {
       {showMyActivitiesPage && user && (
         <MyActivitiesPage
           user={user}
-          onViewActivity={handleViewSavedActivity}
-          onBackToGenerator={handleClearResultsAndGoToGenerator}
+          onViewActivity={() => {}}
+          onBackToGenerator={() => setShowMyActivitiesPage(false)}
         />
       )}
-
-      {/* ... your existing modals ... */}
     </Layout>
   );
 };

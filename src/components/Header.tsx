@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { APP_NAME } from '../constants';
 import { User } from '../types';
 import { Bars3Icon } from '@heroicons/react/24/outline';

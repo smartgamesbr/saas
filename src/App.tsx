@@ -11,7 +11,7 @@ import { ActivityFormData, GeneratedPage } from './types';
 import Logger from './utils/logger';
 
 const App: React.FC = () => {
-  const { user, signIn, signOut, subscribe, isLoading } = useAuth();
+  const { user, signIn, signOut, subscribe, isLoading, authError } = useAuth();
   const [showMyActivitiesPage, setShowMyActivitiesPage] = useState(false);
   const [currentActivityForm, setCurrentActivityForm] = useState<ActivityFormData | null>(null);
   const [generatedPages, setGeneratedPages] = useState<GeneratedPage[]>([]);
@@ -20,27 +20,22 @@ const App: React.FC = () => {
 
   useEffect(() => {
     Logger.debug('App component mounted');
-    setAppInitialized(true);
+    const timer = setTimeout(() => {
+      setAppInitialized(true);
+    }, 500); // Small delay to ensure auth is ready
     
     return () => {
+      clearTimeout(timer);
       Logger.debug('App component unmounting');
     };
   }, []);
 
   useEffect(() => {
-    Logger.debug('App state update:', {
-      isLoading,
-      hasUser: !!user,
-      showMyActivitiesPage,
-      hasCurrentForm: !!currentActivityForm,
-      generatedPagesCount: generatedPages.length,
-      viewingActivityName,
-      appInitialized
-    });
-  }, [isLoading, user, showMyActivitiesPage, currentActivityForm, generatedPages, viewingActivityName, appInitialized]);
+    Logger.debug('Auth state changed:', { isLoading, hasUser: !!user, authError });
+  }, [isLoading, user, authError]);
 
-  if (!appInitialized || isLoading) {
-    Logger.debug('App showing loading state:', { appInitialized, isLoading });
+  // Only show loading state during initial load
+  if (!appInitialized || (isLoading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <LoadingSpinner text="Carregando..." size="lg" />
@@ -84,7 +79,7 @@ const App: React.FC = () => {
         onMySubscriptionClick={handleSubscriptionClick}
       >
         {showGeneratorForm && (
-          <>
+          <div className="animate-fade-in">
             <div className="text-center mb-10">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-sky-700">
                 Gerador de Atividades Escolares com IA
@@ -104,40 +99,44 @@ const App: React.FC = () => {
               simulatedUserTier={null}
               onSubscribeClick={handleSubscriptionClick}
             />
-          </>
+          </div>
         )}
 
         {showResultsView && (
-          <GeneratedActivityView
-            pages={generatedPages}
-            onDownloadPdf={() => {}}
-            isGeneratingPdf={false}
-            onClearResults={() => {
-              setGeneratedPages([]);
-              setCurrentActivityForm(null);
-              setViewingActivityName(null);
-            }}
-            onSaveActivity={() => {}}
-            isSavingActivity={false}
-            activityName={viewingActivityName}
-          />
+          <div className="animate-slide-up">
+            <GeneratedActivityView
+              pages={generatedPages}
+              onDownloadPdf={() => {}}
+              isGeneratingPdf={false}
+              onClearResults={() => {
+                setGeneratedPages([]);
+                setCurrentActivityForm(null);
+                setViewingActivityName(null);
+              }}
+              onSaveActivity={() => {}}
+              isSavingActivity={false}
+              activityName={viewingActivityName}
+            />
+          </div>
         )}
 
         {showMyActivitiesPage && user && (
-          <MyActivitiesPage
-            user={user}
-            onViewActivity={(pages, activityName) => {
-              setGeneratedPages(pages);
-              setViewingActivityName(activityName);
-              setShowMyActivitiesPage(false);
-            }}
-            onBackToGenerator={() => {
-              setShowMyActivitiesPage(false);
-              setGeneratedPages([]);
-              setCurrentActivityForm(null);
-              setViewingActivityName(null);
-            }}
-          />
+          <div className="animate-slide-up">
+            <MyActivitiesPage
+              user={user}
+              onViewActivity={(pages, activityName) => {
+                setGeneratedPages(pages);
+                setViewingActivityName(activityName);
+                setShowMyActivitiesPage(false);
+              }}
+              onBackToGenerator={() => {
+                setShowMyActivitiesPage(false);
+                setGeneratedPages([]);
+                setCurrentActivityForm(null);
+                setViewingActivityName(null);
+              }}
+            />
+          </div>
         )}
       </Layout>
     </ErrorBoundary>

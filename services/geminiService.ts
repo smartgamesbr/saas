@@ -1,14 +1,14 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ActivityFormData, PageConfig, Subject, PageStructure, ActivitySectionType, ActivityComponent, Question, Age } from '../types';
 import { GEMINI_TEXT_MODEL, GEMINI_IMAGE_MODEL } from '../constants';
 
 // Initialize GoogleGenAI with the API key from environment variables
-if (!process.env.API_KEY) {
-  console.error("CRITICAL: API_KEY for Gemini is not defined in process.env. AI functionalities will fail.");
+const apiKey = import.meta.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.error("CRITICAL: GEMINI_API_KEY is not defined in environment variables. AI functionalities will fail.");
 }
-// fix: Must use named parameter
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+const ai = new GoogleGenAI({ apiKey });
 
 const cleanJsonString = (jsonStr: string): string => {
   let cleaned = jsonStr.trim();
@@ -39,15 +39,14 @@ const getPedagogicalGuidelines = (age: Age | string): string => {
 
 const getRandomUppercaseLetter = () => String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
-
 export const generateActivityPageStructure = async (
   formData: ActivityFormData,
   pageConfig: PageConfig,
   pageNumber: number,
   totalPages: number
 ): Promise<PageStructure> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY for Gemini (text generation) is not configured in process.env.");
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured in environment variables.");
   }
 
   const { age, schoolYear, activityComponents, specificTopic } = formData;
@@ -233,7 +232,6 @@ Importante:
         }
     }
 
-
     structure.sections.forEach(section => {
       section.id = section.id || `section-${crypto.randomUUID()}`;
       if (subject === Subject.COLORIR && section.imagePrompt && !section.type) section.type = Subject.COLORIR;
@@ -287,7 +285,6 @@ Importante:
          console.warn(`Seção Caça-Palavras (ID: ${section.id}, Título: ${section.title}) não possui wordSearchGridData. A grade não será renderizada.`);
       }
 
-
       if (section.questions) {
         section.questions.forEach(q => {
           q.id = q.id || `q-${crypto.randomUUID()}`;
@@ -320,8 +317,8 @@ Importante:
 };
 
 export const generateSectionImage = async (imagePrompt: string): Promise<string> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY for Gemini (image generation) is not configured in process.env.");
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured in environment variables.");
   }
   if (!imagePrompt || imagePrompt.trim() === "") {
     throw new Error("Image prompt cannot be empty for generating a section image.");

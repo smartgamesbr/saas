@@ -3,7 +3,7 @@ import { ActivityFormData, GeneratedPage, User } from './types';
 import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
 import ActivityForm from './components/ActivityForm';
-import GeneratedActivityView from './components/GeneratedActivityView.tsx';
+import GeneratedActivityView from './components/GeneratedActivityView';
 import LoadingSpinner from './components/LoadingSpinner';
 import Modal from './components/Modal';
 import SubscriptionPlans from './components/SubscriptionPlans';
@@ -26,7 +26,7 @@ const App: React.FC = () => {
 
   if (authIsLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <LoadingSpinner text="Carregando...\" size="lg"/>
+      <LoadingSpinner text="Carregando..." size="lg"/>
     </div>;
   }
 

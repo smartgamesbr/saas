@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User as AppUser } from '../types';
 import { supabase, getUserProfile } from '../../supabaseClient';
 import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
-import { ADMIN_EMAIL } from '../constants';
+import { ADMIN_EMAIL } from '../../constants';
 
 export const useAuth = () => {
   const [appUser, setAppUser] = useState<AppUser | null>(null);

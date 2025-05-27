@@ -1,128 +1,201 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gerador de Atividade com IA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        line-height: 1.6; /* Melhor espaçamento vertical para texto */
+      :root {
+        --primary-color: #0EA5E9;
+        --primary-dark: #0284C7;
+        --secondary-color: #64748B;
+        --background-light: #F8FAFC;
+        --text-primary: #1E293B;
+        --text-secondary: #475569;
       }
+
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+        background-color: var(--background-light);
+        color: var(--text-primary);
+      }
+
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Poppins', sans-serif;
       }
+
       .page-render-container {
-        width: 100%; /* Allow it to shrink */
-        max-width: 210mm; /* A4 width as maximum */
-        min-height: 297mm; /* A4 height */
-        padding: 15mm; /* Margem interna para visualização em tela */
+        width: 100%;
+        max-width: 210mm;
+        min-height: 297mm;
+        padding: 15mm;
         margin: 20px auto;
         background-color: white;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        box-sizing: border-box; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-sizing: border-box;
         page-break-after: always;
-        display: flex; /* Flex container para empurrar footer para baixo */
-        flex-direction: column; /* Organiza filhos verticalmente */
-        font-size: 11pt; /* Tamanho de fonte base para melhor leitura no PDF */
+        display: flex;
+        flex-direction: column;
+        font-size: 11pt;
+        border-radius: 8px;
       }
+
       .page-render-container main {
-        flex-grow: 1; /* Faz o main ocupar o espaço disponível */
+        flex-grow: 1;
       }
+
       .page-render-container img {
         max-width: 100%;
         height: auto;
         display: block;
-        margin-left: auto; /* Centraliza imagens se forem menores que a largura */
-        margin-right: auto;
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-      .page-render-container .activity-section {
-         padding: 10px; /* Padding interno menor para seções */
-         margin-bottom: 20px; /* Espaçamento maior entre seções */
-      }
-       .page-render-container .activity-section h4 { /* Título da seção */
-        font-size: 13pt;
-        margin-bottom: 10px; /* Espaço abaixo do título da seção */
+        margin: 10px auto;
+        border-radius: 4px;
       }
 
-       @media print {
+      .page-render-container .activity-section {
+        padding: 16px;
+        margin-bottom: 24px;
+        border: 1px dashed var(--secondary-color);
+        border-radius: 8px;
+        background-color: white;
+      }
+
+      .page-render-container .activity-section h4 {
+        font-size: 14pt;
+        margin-bottom: 12px;
+        color: var(--primary-color);
+      }
+
+      .answer-lines .answer-line {
+        height: 2em;
+        border-bottom: 1px solid var(--secondary-color);
+        margin-bottom: 0.8em;
+      }
+
+      .word-search-grid table {
+        border-collapse: collapse;
+        margin: 16px auto;
+        background: white;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      .word-search-grid td {
+        border: 1px solid #E2E8F0;
+        width: 2.2em;
+        height: 2.2em;
+        text-align: center;
+        vertical-align: middle;
+        font-family: 'Inter', monospace;
+        font-size: 12pt;
+        text-transform: uppercase;
+        transition: background-color 0.2s;
+      }
+
+      .word-search-grid td:hover {
+        background-color: #F1F5F9;
+      }
+
+      .word-search-words h5 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 12pt;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 16px 0 8px;
+      }
+
+      @media print {
         body {
           margin: 0;
           padding: 0;
-          -webkit-print-color-adjust: exact; 
-          print-color-adjust: exact; 
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
+
         .page-render-container {
           margin: 0 !important;
-          padding: 15mm !important; /* Margem para impressão direta do navegador */
+          padding: 15mm !important;
           box-shadow: none !important;
-          border: none !important; 
-          width: 210mm !important; /* Strict A4 for print */
-          height: 297mm !important; /* Strict A4 for print */
+          border: none !important;
+          width: 210mm !important;
+          height: 297mm !important;
           min-height: 297mm !important;
           page-break-after: always;
         }
       }
-      .answer-lines .answer-line {
-        height: 1.8em; 
-        border-bottom: 1px solid #718096; /* Linha mais escura */
-        margin-bottom: 0.6em; 
+
+      /* Modern UI Enhancements */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
       }
-      .word-search-grid table {
-        border-collapse: collapse;
-        margin-left: auto;
-        margin-right: auto;
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
       }
-      .word-search-grid td {
-        border: 1px solid #cbd5e0; /* slate-300 */
-        width: 2em; /* Ajustável para tamanho da célula */
-        height: 2em; /* Ajustável para tamanho da célula */
-        text-align: center;
-        vertical-align: middle;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 12pt; /* Ajustável para tamanho da letra na grade */
-        text-transform: uppercase;
+
+      .btn-primary:hover {
+        background-color: var(--primary-dark);
       }
-      .word-search-words h5 {
-        font-family: 'Poppins', sans-serif;
-        font-size: 11pt;
-        font-weight: 600;
-        color: #334155; /* slate-700 */
-        margin-bottom: 5px;
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      .input-field {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .input-field:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        outline: none;
+      }
+
+      .select-field {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+      }
+
+      /* Loading Animation */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.0.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.44.4"
-  }
-}
-</script>
-</head>
-  <body class="bg-slate-50 text-slate-800">
+  </head>
+  <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      The following Mercado Pago credentials were provided by the user.
-      For a real application, these (especially Access Token and Client Secret)
-      would be used on the backend to manage subscriptions.
-      Public Key: APP_USR-8df4c4e8-23b6-4a2b-8a7d-2eb1b3261a02
-      Access Token: APP_USR-4070985152217669-052006-b06a6d8f547126e545b9f0e6b6a6c0a4-432500890
-      Client ID: 4070985152217669
-      Client Secret: jRm1fIodCnbf5Dv3FfNLPgspZxtyIn7O
-    -->
     <script type="module" src="./index.tsx"></script>
   </body>
-</html><link rel="stylesheet" href="index.css">
-<script src="index.tsx" type="module"></script>
+</html>

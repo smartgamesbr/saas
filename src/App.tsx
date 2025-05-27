@@ -2,12 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { ActivityFormData, GeneratedPage, User } from './types';
 import { useAuth } from '../hooks/useAuth';
 import Layout from './components/Layout';
-import ActivityForm from './components/ActivityForm';
-import GeneratedActivityView from './components/GeneratedActivityView';
-import LoadingSpinner from './components/LoadingSpinner';
-import Modal from './components/Modal';
-import SubscriptionPlans from './components/SubscriptionPlans';
-import MyActivitiesPage from './components/MyActivitiesPage';
+import ActivityForm from '../components/ActivityForm';
+import GeneratedActivityView from '../components/GeneratedActivityView';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Modal from '../components/Modal';
+import SubscriptionPlans from '../components/SubscriptionPlans';
+import MyActivitiesPage from '../components/MyActivitiesPage';
 import { SimulatedUserTier } from './types';
 
 const App: React.FC = () => {
@@ -28,7 +28,7 @@ const App: React.FC = () => {
 
   if (authIsLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <LoadingSpinner text="Carregando...\" size="lg"/>
+      <LoadingSpinner text="Carregando..." size="lg"/>
     </div>;
   }
 

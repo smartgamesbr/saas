@@ -2,7 +2,7 @@ import React from 'react';
 import { User } from '../types';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import Footer from './Footer';
+import Footer from '../components/Footer';
 
 interface LayoutProps {
   children: React.ReactNode;

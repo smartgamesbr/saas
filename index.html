@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador de Atividade com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.6; /* Melhor espaçamento vertical para texto */
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Poppins', sans-serif;
+      }
+      .page-render-container {
+        width: 100%; /* Allow it to shrink */
+        max-width: 210mm; /* A4 width as maximum */
+        min-height: 297mm; /* A4 height */
+        padding: 15mm; /* Margem interna para visualização em tela */
+        margin: 20px auto;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        box-sizing: border-box; 
+        page-break-after: always;
+        display: flex; /* Flex container para empurrar footer para baixo */
+        flex-direction: column; /* Organiza filhos verticalmente */
+        font-size: 11pt; /* Tamanho de fonte base para melhor leitura no PDF */
+      }
+      .page-render-container main {
+        flex-grow: 1; /* Faz o main ocupar o espaço disponível */
+      }
+      .page-render-container img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin-left: auto; /* Centraliza imagens se forem menores que a largura */
+        margin-right: auto;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      .page-render-container .activity-section {
+         padding: 10px; /* Padding interno menor para seções */
+         margin-bottom: 20px; /* Espaçamento maior entre seções */
+      }
+       .page-render-container .activity-section h4 { /* Título da seção */
+        font-size: 13pt;
+        margin-bottom: 10px; /* Espaço abaixo do título da seção */
+      }
+
+       @media print {
+        body {
+          margin: 0;
+          padding: 0;
+          -webkit-print-color-adjust: exact; 
+          print-color-adjust: exact; 
+        }
+        .page-render-container {
+          margin: 0 !important;
+          padding: 15mm !important; /* Margem para impressão direta do navegador */
+          box-shadow: none !important;
+          border: none !important; 
+          width: 210mm !important; /* Strict A4 for print */
+          height: 297mm !important; /* Strict A4 for print */
+          min-height: 297mm !important;
+          page-break-after: always;
+        }
+      }
+      .answer-lines .answer-line {
+        height: 1.8em; 
+        border-bottom: 1px solid #718096; /* Linha mais escura */
+        margin-bottom: 0.6em; 
+      }
+      .word-search-grid table {
+        border-collapse: collapse;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .word-search-grid td {
+        border: 1px solid #cbd5e0; /* slate-300 */
+        width: 2em; /* Ajustável para tamanho da célula */
+        height: 2em; /* Ajustável para tamanho da célula */
+        text-align: center;
+        vertical-align: middle;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 12pt; /* Ajustável para tamanho da letra na grade */
+        text-transform: uppercase;
+      }
+      .word-search-words h5 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11pt;
+        font-weight: 600;
+        color: #334155; /* slate-700 */
+        margin-bottom: 5px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.0.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.44.4"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-50 text-slate-800">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      The following Mercado Pago credentials were provided by the user.
+      For a real application, these (especially Access Token and Client Secret)
+      would be used on the backend to manage subscriptions.
+      Public Key: APP_USR-8df4c4e8-23b6-4a2b-8a7d-2eb1b3261a02
+      Access Token: APP_USR-4070985152217669-052006-b06a6d8f547126e545b9f0e6b6a6c0a4-432500890
+      Client ID: 4070985152217669
+      Client Secret: jRm1fIodCnbf5Dv3FfNLPgspZxtyIn7O
+    -->
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html><link rel="stylesheet" href="index.css">
+<script src="index.tsx" type="module"></script>

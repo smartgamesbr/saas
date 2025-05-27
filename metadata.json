@@ -1,0 +1,6 @@
+{
+  "name": "Gerador de Atividade com IA",
+  "description": "Um SaaS para gerar atividades escolares personalizadas usando inteligência artificial. Crie materiais para diversas idades, anos escolares e matérias, com diferentes tipos de exercícios. Gere PDFs prontos para impressão.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

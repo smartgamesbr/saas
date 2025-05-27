@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User as AppUser } from '../types';
 import { supabase, getUserProfile } from '../supabaseClient';
-import { AuthError, User as SupabaseUser, PostgrestError } from '@supabase/supabase-js';
+import { AuthError, User as SupabaseUser } from '@supabase/supabase-js';
 import { ADMIN_EMAIL } from '../constants';
+import Logger from '../utils/logger';
 
 export const useAuth = () => {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
@@ -10,6 +11,7 @@ export const useAuth = () => {
   const [authError, setAuthError] = useState<AuthError | null>(null);
   
   const processSupabaseUser = useCallback(async (supabaseUser: SupabaseUser | null): Promise<AppUser | null> => {
+    Logger.debug('Processing Supabase user:', { userId: supabaseUser?.id });
     if (!supabaseUser) {
       return null;
     }
@@ -24,8 +26,7 @@ export const useAuth = () => {
         isSubscribed: profile?.isSubscribed || false,
       };
     } catch (err) {
-      console.error('Error processing user profile:', err);
-      // Return basic user info even if profile fetch fails
+      Logger.error('Error processing user profile:', err);
       return {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -39,33 +40,40 @@ export const useAuth = () => {
     let isMounted = true;
     
     const fetchSession = async () => {
+      Logger.debug('Fetching session...');
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!isMounted) return;
+        if (!isMounted) {
+          Logger.debug('Component unmounted during session fetch');
+          return;
+        }
 
         if (sessionError) {
+          Logger.error('Session fetch error:', sessionError);
           setAuthError(sessionError);
           setIsLoading(false);
           return;
         }
 
         if (session?.user) {
+          Logger.debug('Session found, processing user');
           const processedUser = await processSupabaseUser(session.user);
           if (isMounted) {
             setAppUser(processedUser);
             setAuthError(null);
           }
         } else {
+          Logger.debug('No session found');
           if (isMounted) {
             setAppUser(null);
             setAuthError(null);
           }
         }
       } catch (err) {
+        Logger.error('Unexpected error during session fetch:', err);
         if (!isMounted) return;
         
-        console.error("Error during session fetch:", err);
         if (err instanceof AuthError) {
           setAuthError(err);
         } else {
@@ -73,6 +81,7 @@ export const useAuth = () => {
         }
       } finally {
         if (isMounted) {
+          Logger.debug('Setting loading state to false');
           setIsLoading(false);
         }
       }
@@ -82,6 +91,7 @@ export const useAuth = () => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        Logger.debug('Auth state changed:', { event: _event, hasSession: !!session });
         if (!isMounted) return;
         
         try {
@@ -98,14 +108,15 @@ export const useAuth = () => {
             }
           }
         } catch (err) {
+          Logger.error('Error during auth state change:', err);
           if (!isMounted) return;
-          console.error("Error during auth state change:", err);
           setAuthError(err instanceof AuthError ? err : new AuthError(err instanceof Error ? err.message : 'Unknown error during auth state change.'));
         }
       }
     );
 
     return () => {
+      Logger.debug('Cleaning up auth effect');
       isMounted = false;
       authListener?.subscription.unsubscribe();
     };

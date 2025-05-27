@@ -38,7 +38,7 @@ const App: React.FC = () => {
   if (!appInitialized || (isLoading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <LoadingSpinner text="Carregando..." size="lg" />
+        <LoadingSpinner text="Carregando...\" size="lg" />
       </div>
     );
   }
